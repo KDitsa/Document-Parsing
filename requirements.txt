@@ -1,0 +1,13 @@
+--extra-index-url https://www.paddlepaddle.org.cn/packages/stable/cpu/
+
+paddlepaddle==3.2.0
+paddleocr[all]
+
+llama-cpp-python
+pdfplumber
+python-docx
+docx2pdf
+tqdm
+Pillow
+numpy
+opencv-python

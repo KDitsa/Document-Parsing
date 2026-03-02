@@ -1,0 +1,9 @@
+# Ignore Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# Ignore Python bytecode cache
+__pycache__/
+*.py[cod]
+
+# Ignore Llama model file because it is huge
+app/models/llama3.gguf

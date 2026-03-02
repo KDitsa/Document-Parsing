@@ -36,22 +36,19 @@ Document_Parsing
 │   ├── user_uploads               # Uploaded files
 │   ├── final_json_output          # Final JSON results
 │   ├── models
-│   │   ├── __init__.py
+│   │   ├── llama3.gguf
 │   │   ├── model_registry.py      # Singleton loaders for LLM and PPStructure
-│   │   ├── pipelines
-│   │   │   ├── text_pipeline
-│   │   │   │   ├── __init__.py
-│   │   │   │   ├── DocumentBlock.py
-│   │   │   │   ├── file_router.py
-│   │   │   │   ├── loaders.py
-│   │   │   │   ├── generate_JSON.py
-│   │   │   │   ├── pdf_images
-│   │   │   │   ├── docx2pdf
-│   │   │   │   ├── text_pipeline.py
-│   │   │   │   ├── image_pipeline.py
-│   │   │   │   ├── audio_pipeline.py
-│   │   │   │   ├── video_pipeline.py
-│   │   │   │   └── output
+│   ├── pipelines
+│   │   ├── text_pipeline_folder
+│   │   │   ├── DocumentBlock.py
+│   │   │   ├── file_router.py
+│   │   │   ├── loaders.py
+│   │   │   ├── generate_JSON.py
+│   │   │   ├── pdf_images
+│   │   │   ├── docx2pdf
+│   │   ├── text_pipeline.py
+│   │   ├── image_pipeline.py
+│   │   └── output
 │   └── __main__.py
 ├── requirements.txt
 └── README.md
@@ -78,6 +75,15 @@ pip install -r requirements.txt
 > - **PaddlePaddle** requires the extra index URL as specified in `requirements.txt`.  
 > - **Llama.cpp** backend requires a C++ compiler. On Windows, install **Visual Studio with C++ build tools**. On Linux/macOS, ensure `g++` or `clang++` is installed.  
 > - **docx2pdf** requires **Microsoft Word** to be installed, as it uses Word for conversion.
+
+3. **Download the Llama3 model**:
+
+Make sure the model is saved in the app/models directory as llama3.gguf:
+
+```bash
+mkdir -p app/models
+curl -L -C - -o "app/models/llama3.gguf" "https://huggingface.co/QuantFactory/Meta-Llama-3-8B-Instruct-GGUF/resolve/main/Meta-Llama-3-8B-Instruct.Q4_K_M.gguf"
+```
 
 ---
 
