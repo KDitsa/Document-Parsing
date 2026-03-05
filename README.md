@@ -100,7 +100,5 @@ python -m app
 ---
 
 ## 🌟 Future Improvements
-
-- Add audio/video pipelines for speech-to-text and video frame parsing.
 - Improve LLM prompts for more robust JSON extraction.
 - Add interactive GUI or web interface for easier file uploads and result previews.
