@@ -17,6 +17,10 @@ if __name__ == "__main__":
             #test_file = r"..." # Give File Path
             #output = run_audio_pipeline(test_file, enable_diarization=True)
             #save_final_output(output, test_file)
+        elif ext in [".mp4", ".avi", ".mkv"]:
+            #test_file = r"..." # Give File Path
+            #output = video_parsing_pipeline(test_file)
+            #save_final_output(output, test_file)
         else:
             logging.warning(f"Unsupported file type: {ext}")
             return []  # Return empty list instead of raising
