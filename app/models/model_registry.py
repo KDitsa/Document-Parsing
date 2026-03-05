@@ -5,6 +5,7 @@ logging.basicConfig(level=logging.INFO)
 
 _llm_model = None
 _ppstructure = None
+_whisper = None
 
 def get_llm():
     """
@@ -41,3 +42,18 @@ def get_ppstructure():
         logging.info("PPStructure loaded.")
 
     return _ppstructure
+
+def get_whisper():
+    """
+    Singleton loader for Whisper model.
+    Loads only once.
+    """
+    global _whisper
+
+    if _whisper is None:
+        logging.info("Loading Whisper model...")
+        import whisper
+        model_size = "tiny"  
+        _whisper = whisper.load_model(model_size)
+        logging.info("Whisper model loaded.")
+    return _whisper

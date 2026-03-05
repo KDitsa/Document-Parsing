@@ -11,3 +11,9 @@ tqdm
 Pillow
 numpy
 opencv-python
+openai-whisper
+resemblyzer
+pydub
+scikit-learn
+torch
+librosa

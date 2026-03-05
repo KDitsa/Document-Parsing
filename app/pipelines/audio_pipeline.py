@@ -1,0 +1,192 @@
+import os
+import numpy as np
+import pandas as pd
+import whisper
+import torch
+from pydub import AudioSegment
+from resemblyzer import preprocess_wav, VoiceEncoder
+from sklearn.cluster import AgglomerativeClustering
+from sklearn.preprocessing import normalize
+from sklearn.metrics import silhouette_score
+from datetime import timedelta
+from app.models.model_registry import get_whisper
+import logging
+from pathlib import Path
+
+logging.basicConfig(level=logging.INFO)
+
+CHUNK_LENGTH_MS = 30000
+FRAME_DURATION = 1.5
+MIN_SPEAKERS = 2
+MAX_SPEAKERS = 5
+WHISPER_MODEL = "tiny"
+
+OUTPUT_DIR = "output"
+CLEANUP_CHUNKS = True
+
+model = get_whisper()
+encoder = VoiceEncoder()
+
+def sec_fmt(s):
+    return str(timedelta(seconds=round(s, 3)))
+
+
+def split_audio_to_chunks(path, chunk_length_ms):
+
+    audio = AudioSegment.from_file(path)
+    chunk_files = []
+
+    for i in range(0, len(audio), chunk_length_ms):
+
+        chunk = audio[i:i + chunk_length_ms]
+
+        name = f"chunk_{i//chunk_length_ms}.wav"
+
+        chunk.export(name, format="wav")
+
+        chunk_files.append(name)
+
+    return chunk_files
+
+
+def embed_frames(frames):
+
+    emb_list = []
+
+    for f in frames:
+        emb_list.append(encoder.embed_utterance(f))
+
+    return np.vstack(emb_list)
+
+
+def run_audio_pipeline(AUDIO_FILE, enable_diarization=False):
+
+    if not os.path.exists(AUDIO_FILE):
+        raise FileNotFoundError(f"Audio file not found: {AUDIO_FILE}")
+
+    os.makedirs(OUTPUT_DIR, exist_ok=True)
+
+    chunks = split_audio_to_chunks(AUDIO_FILE, CHUNK_LENGTH_MS)
+
+    rows = []
+    full_text = []
+
+    for chunk_idx, chunk_fp in enumerate(chunks):
+
+        print(f"\nProcessing chunk {chunk_idx}: {chunk_fp}")
+
+        result = model.transcribe(chunk_fp, fp16=False, verbose=False)
+
+        segments = result.get("segments", [])
+        text = result.get("text", "").strip()
+
+        
+        if not enable_diarization:
+
+            full_text.append(text)
+
+        else:
+
+            wav = preprocess_wav(chunk_fp)
+
+            sr = 16000
+            frame_len = int(FRAME_DURATION * sr)
+
+            frames = [
+                wav[i:i + frame_len]
+                for i in range(0, len(wav), frame_len)
+                if len(wav[i:i + frame_len]) > 0
+            ]
+
+            if len(frames) == 0:
+                continue
+
+            embeddings = embed_frames(frames)
+
+            embeddings = normalize(embeddings)
+
+            best_k = MIN_SPEAKERS
+            best_score = -1
+
+            for k in range(MIN_SPEAKERS, min(MAX_SPEAKERS, len(frames)) + 1):
+
+                try:
+
+                    labels_test = AgglomerativeClustering(n_clusters=k).fit_predict(embeddings)
+
+                    if len(set(labels_test)) < 2:
+                        continue
+
+                    score = silhouette_score(embeddings, labels_test)
+
+                    if score > best_score:
+                        best_score = score
+                        best_k = k
+
+                except:
+                    continue
+
+            clustering = AgglomerativeClustering(n_clusters=best_k)
+
+            frame_labels = clustering.fit_predict(embeddings)
+
+            chunk_offset = chunk_idx * (CHUNK_LENGTH_MS / 1000.0)
+
+            for seg in segments:
+
+                seg_start = seg["start"]
+                seg_end = seg["end"]
+
+                seg_mid = (seg_start + seg_end) / 2
+
+                frame_idx = int(seg_mid // FRAME_DURATION)
+
+                frame_idx = max(0, min(frame_idx, len(frame_labels) - 1))
+
+                speaker = frame_labels[frame_idx]
+
+                rows.append({
+
+                    "start_time": sec_fmt(chunk_offset + seg_start),
+                    "end_time": sec_fmt(chunk_offset + seg_end),
+                    "speaker": f"Speaker_{speaker+1}",
+                    "text": seg["text"].strip()
+
+                })
+
+       
+        if CLEANUP_CHUNKS:
+            try:
+                os.remove(chunk_fp)
+            except:
+                pass
+
+    
+    if not enable_diarization:
+
+        text_output = os.path.join(OUTPUT_DIR, "transcript.txt")
+
+        with open(text_output, "w", encoding="utf-8") as f:
+            f.write(" ".join(full_text))
+
+        print(f"\nTranscript saved → {text_output}")
+
+        return text_output
+
+    # JSON OUTPUT
+    df = pd.DataFrame(rows)
+
+    json_output = os.path.join(OUTPUT_DIR, "transcript_with_speakers.json")
+
+    df.to_json(json_output, orient="records", indent=4)
+
+    print(f"\nDiarized transcript saved → {json_output}")
+
+    return json_output
+
+
+
+
+
+
+
