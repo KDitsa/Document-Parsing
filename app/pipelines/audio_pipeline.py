@@ -164,14 +164,10 @@ def run_audio_pipeline(AUDIO_FILE, enable_diarization=False):
     
     if not enable_diarization:
 
-        text_output = os.path.join(OUTPUT_DIR, "transcript.txt")
+        transcript_text = " ".join(full_text)
+        print(f"\nTranscript generated.")
+        return transcript_text
 
-        with open(text_output, "w", encoding="utf-8") as f:
-            f.write(" ".join(full_text))
-
-        print(f"\nTranscript saved → {text_output}")
-
-        return text_output
 
     # JSON OUTPUT
     df = pd.DataFrame(rows)
