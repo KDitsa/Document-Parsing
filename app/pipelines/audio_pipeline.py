@@ -166,6 +166,7 @@ def run_audio_pipeline(AUDIO_FILE, enable_diarization=False):
 
         transcript_text = " ".join(full_text)
         print(f"\nTranscript generated.")
+        print(transcript_text)
         return transcript_text
 
 
