@@ -170,7 +170,6 @@ def run_audio_pipeline(AUDIO_FILE, enable_diarization=False):
 
 
     if not enable_diarization:
-        # Construct the single-entry output for non-diarized transcript
         single_entry_output = [{
             "start_time": "0:00:00.000",
             "end_time": sec_fmt(total_audio_duration_ms / 1000.0),
