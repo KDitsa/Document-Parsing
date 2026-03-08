@@ -9,9 +9,10 @@ from sklearn.cluster import AgglomerativeClustering
 from sklearn.preprocessing import normalize
 from sklearn.metrics import silhouette_score
 from datetime import timedelta
-from app.models.model_registry import get_whisper
 import logging
+from app.models.model_registry import get_whisper
 from pathlib import Path
+import json
 
 logging.basicConfig(level=logging.INFO)
 
@@ -68,22 +69,28 @@ def run_audio_pipeline(AUDIO_FILE, enable_diarization=False):
 
     chunks = split_audio_to_chunks(AUDIO_FILE, CHUNK_LENGTH_MS)
 
-    rows = []
-    full_text = []
+    rows = [] # For diarized output
+    full_combined_text = "" # For non-diarized output (entire text)
+
+    total_audio_duration_ms = 0
+    try:
+        audio = AudioSegment.from_file(AUDIO_FILE)
+        total_audio_duration_ms = len(audio)
+    except Exception as e:
+        logging.warning(f"Could not determine total audio duration: {e}")
 
     for chunk_idx, chunk_fp in enumerate(chunks):
 
         print(f"\nProcessing chunk {chunk_idx}: {chunk_fp}")
 
-        result = model.transcribe(chunk_fp, fp16=False, verbose=False)
+        # Changed fp16 to True for reduced memory usage
+        result = model.transcribe(chunk_fp, fp16=True, verbose=False)
 
         segments = result.get("segments", [])
-        text = result.get("text", "").strip()
+        chunk_text = result.get("text", "").strip() # Text for the current chunk
 
-        
         if not enable_diarization:
-
-            full_text.append(text)
+            full_combined_text += chunk_text + " " # Accumulate text
 
         else:
 
@@ -154,36 +161,33 @@ def run_audio_pipeline(AUDIO_FILE, enable_diarization=False):
 
                 })
 
-       
+
         if CLEANUP_CHUNKS:
             try:
                 os.remove(chunk_fp)
             except:
                 pass
 
-    
+
     if not enable_diarization:
+        # Construct the single-entry output for non-diarized transcript
+        single_entry_output = [{
+            "start_time": "0:00:00.000",
+            "end_time": sec_fmt(total_audio_duration_ms / 1000.0),
+            "speaker": None,
+            "text": full_combined_text.strip()
+        }]
+        print(f"\nNon-diarized transcript generated.")
+        return single_entry_output 
 
-        transcript_text = " ".join(full_text)
-        print(f"\nTranscript generated.")
-        print(transcript_text)
-        return transcript_text
-
-
-    # JSON OUTPUT
+    # JSON OUTPUT for diarization enabled
     df = pd.DataFrame(rows)
 
-    json_output = os.path.join(OUTPUT_DIR, "transcript_with_speakers.json")
+    json_output_path = os.path.join(OUTPUT_DIR, "transcript_with_speakers.json")
 
-    df.to_json(json_output, orient="records", indent=4)
+    df.to_json(json_output_path, orient="records", indent=4)
 
-    print(f"\nDiarized transcript saved → {json_output}")
+    print(f"\nDiarized transcript saved → {json_output_path}")
 
-    return json_output
-
-
-
-
-
-
+    return json_output_path # Return the path to the JSON file
 
