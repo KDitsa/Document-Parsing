@@ -44,10 +44,9 @@ def video_parsing_pipeline(video_path):
         
 
         return {
-            "transcript_file": transcript_path,
-            "frames_folder": frames_folder,
-            "total_slides": len(frames),
-            "parsed_documents": parsed_doc
+            "audio_file": transcript_path,
+            "total_frames": len(frames),
+            "parsed_frames": parsed_doc
         }
 
     
