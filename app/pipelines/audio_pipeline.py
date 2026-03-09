@@ -85,13 +85,13 @@ def run_audio_pipeline(AUDIO_FILE, enable_diarization=False):
 
         print(f"\nProcessing chunk {chunk_idx}: {chunk_fp}")
 
-        # Changed fp16 to True for reduced memory usage
+        
         result = model.transcribe(chunk_fp, fp16=True, verbose=False)
 
         segments = result.get("segments", [])
         chunk_text = result.get("text", "").strip() # Text for the current chunk
 
-        # Accumulate confidence scores for overall calculation
+        
         for seg in segments:
             overall_confidence_sum += np.exp(seg.get("avg_logprob", -10))
             overall_segment_count += 1
@@ -200,4 +200,4 @@ def run_audio_pipeline(AUDIO_FILE, enable_diarization=False):
 
     print(f"\nDiarized transcript saved \u2192 {json_output_path}")
 
-    return json_output_path # Return the path to the JSON file
+    return json_output_path 
