@@ -18,8 +18,14 @@ A Python-based multimodal document parsing system that extracts structured data 
 - 🤖 **LLM Integration**  
   Llama3 converts parsed content into structured JSON.
 
+- 🎤**Efficient Audio Transcribing along with Speaker Diarization**
+  Audio files are efficiently parsed using whisper, resemblyzer and Agglomerative Clustering.
+
+- 🎥**Implemented Effective Video Parsing Pipeline**
+  An efficient video parsing pipeline has been implemented to extract structured JSON output from video files.
+  
 - ⚡ **Singleton Model Loading**  
-  LLM and OCR models are loaded only once for maximum efficiency.
+  LLM, OCR and Whisper models are loaded only once for maximum efficiency.
 
 - 🛡️ **Safe Loading**  
   Gracefully handles unsupported file types or corrupted files.
