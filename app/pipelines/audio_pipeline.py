@@ -165,7 +165,7 @@ def run_audio_pipeline(AUDIO_FILE, enable_diarization=False):
                     "end_time": sec_fmt(chunk_offset + seg_end),
                     "speaker": f"Speaker_{speaker+1}",
                     "text": seg["text"].strip(),
-                    "confidence": seg.get("avg_logprob", 0.0) # Add confidence score here
+                    "confidence": seg.get("avg_logprob", 0.0) 
 
                 })
 
@@ -176,7 +176,7 @@ def run_audio_pipeline(AUDIO_FILE, enable_diarization=False):
             except:
                 pass
 
-    # Calculate overall confidence score
+    
     overall_confidence = overall_confidence_sum / overall_segment_count if overall_segment_count > 0 else 0.0
 
     if not enable_diarization:
@@ -186,10 +186,10 @@ def run_audio_pipeline(AUDIO_FILE, enable_diarization=False):
             "end_time": sec_fmt(total_audio_duration_ms / 1000.0),
             "speaker": None,
             "text": full_combined_text.strip(),
-            "overall_confidence": overall_confidence # Add overall confidence here
+            "overall_confidence": overall_confidence 
         }]
         print(f"\nNon-diarized transcript generated as variable.")
-        return single_entry_output # Return the list of dicts directly
+        return single_entry_output 
 
     # JSON OUTPUT for diarization enabled
     df = pd.DataFrame(rows)
