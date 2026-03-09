@@ -6,11 +6,11 @@ import torch
 from pydub import AudioSegment
 from resemblyzer import preprocess_wav, VoiceEncoder
 from sklearn.cluster import AgglomerativeClustering
+from app.models.model_registry import get_whisper
 from sklearn.preprocessing import normalize
 from sklearn.metrics import silhouette_score
 from datetime import timedelta
 import logging
-from app.models.model_registry import get_whisper
 from pathlib import Path
 import json
 
@@ -71,6 +71,8 @@ def run_audio_pipeline(AUDIO_FILE, enable_diarization=False):
 
     rows = [] # For diarized output
     full_combined_text = "" # For non-diarized output (entire text)
+    overall_confidence_sum = 0 # To accumulate avg_logprob for overall confidence
+    overall_segment_count = 0 # To count total segments for overall confidence
 
     total_audio_duration_ms = 0
     try:
@@ -88,6 +90,11 @@ def run_audio_pipeline(AUDIO_FILE, enable_diarization=False):
 
         segments = result.get("segments", [])
         chunk_text = result.get("text", "").strip() # Text for the current chunk
+
+        # Accumulate confidence scores for overall calculation
+        for seg in segments:
+            overall_confidence_sum += np.exp(seg.get("avg_logprob", -10))
+            overall_segment_count += 1
 
         if not enable_diarization:
             full_combined_text += chunk_text + " " # Accumulate text
@@ -157,7 +164,8 @@ def run_audio_pipeline(AUDIO_FILE, enable_diarization=False):
                     "start_time": sec_fmt(chunk_offset + seg_start),
                     "end_time": sec_fmt(chunk_offset + seg_end),
                     "speaker": f"Speaker_{speaker+1}",
-                    "text": seg["text"].strip()
+                    "text": seg["text"].strip(),
+                    "confidence": seg.get("avg_logprob", 0.0) # Add confidence score here
 
                 })
 
@@ -168,16 +176,20 @@ def run_audio_pipeline(AUDIO_FILE, enable_diarization=False):
             except:
                 pass
 
+    # Calculate overall confidence score
+    overall_confidence = overall_confidence_sum / overall_segment_count if overall_segment_count > 0 else 0.0
 
     if not enable_diarization:
+        # Construct the single-entry output for non-diarized transcript
         single_entry_output = [{
             "start_time": "0:00:00.000",
             "end_time": sec_fmt(total_audio_duration_ms / 1000.0),
             "speaker": None,
-            "text": full_combined_text.strip()
+            "text": full_combined_text.strip(),
+            "overall_confidence": overall_confidence # Add overall confidence here
         }]
-        print(f"\nNon-diarized transcript generated.")
-        return single_entry_output 
+        print(f"\nNon-diarized transcript generated as variable.")
+        return single_entry_output # Return the list of dicts directly
 
     # JSON OUTPUT for diarization enabled
     df = pd.DataFrame(rows)
@@ -186,7 +198,6 @@ def run_audio_pipeline(AUDIO_FILE, enable_diarization=False):
 
     df.to_json(json_output_path, orient="records", indent=4)
 
-    print(f"\nDiarized transcript saved → {json_output_path}")
+    print(f"\nDiarized transcript saved \u2192 {json_output_path}")
 
     return json_output_path # Return the path to the JSON file
-
