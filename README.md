@@ -98,6 +98,43 @@ curl -L -C - -o "app/models/llama3.gguf" "https://huggingface.co/QuantFactory/Me
 
 ---
 
+## ⚙️ GPU Setup (Optional)
+
+If you have an NVIDIA GPU and want faster inference, follow these steps.
+
+### 1️⃣ Install PyTorch with GPU
+
+Check your CUDA version and install the matching `torch` package:
+
+```bash
+# Example for CUDA 12.2
+pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu122
+# Replace cu122 with your CUDA version (cu117, cu118, etc.).
+```
+### 2️⃣ Build llama-cpp-python with CUDA support
+
+On Windows:
+
+```bash
+set FORCE_CMAKE=1&& set CMAKE_ARGS=-DGGML_CUDA=ON -DCMAKE_CUDA_FLAGS="--compiler-options=/Zc:preprocessor" && pip install --no-cache-dir llama-cpp-python
+```
+
+On Linux/macOS:
+
+```bash
+FORCE_CMAKE=1 CMAKE_ARGS="-DGGML_CUDA=ON" pip install --no-cache-dir llama-cpp-python
+```
+
+### 3️⃣ Notes
+
+- C++ compiler required:
+  - Windows: Visual Studio with C++ Build Tools
+  - Linux/macOS: g++ or clang++
+- CUDA Toolkit: Required for GPU compilation.
+- NVIDIA GPU Driver: Ensure it matches your CUDA version.
+
+---
+
 ## 🏃 Usage
 
 Run the application using:
