@@ -52,8 +52,13 @@ Document_Parsing
 │   │   │   ├── generate_JSON.py
 │   │   │   ├── pdf_images
 │   │   │   ├── docx2pdf
+|   |   ├── video_pipeline_folder
+│   │   │   ├── audio_exractor.py
+│   │   │   ├── frame_extractor.py
+│   │   ├── audio_pipeline.py
 │   │   ├── text_pipeline.py
 │   │   ├── image_pipeline.py
+│   │   ├── video_pipeline.py
 │   │   └── output
 │   └── __main__.py
 ├── requirements.txt
