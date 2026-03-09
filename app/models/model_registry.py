@@ -21,6 +21,7 @@ def get_llm():
 
         _llm_model = Llama(
             model_path=str(model_path),
+            n_gpu_layers=-1,
             n_ctx=2048,
             n_threads=4
         )
