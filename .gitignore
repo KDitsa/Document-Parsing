@@ -7,3 +7,10 @@ __pycache__/
 
 # Ignore Llama model file because it is huge
 app/models/llama3.gguf
+app/user_uploads/
+app/final_json_output/
+app/pipelines/video_pipeline_folder/frames/
+app/pipelines/video_pipeline_folder/temp_audio.wav
+app/pipelines/text_pipeline_folder/pdf_images/
+app/pipelines/text_pipeline_folder/docx2pdf/
+app/pipelines/image_temp_output/

@@ -1,12 +1,11 @@
 import os
 import numpy as np
-import pandas as pd
-import whisper
+#import pandas as pd
 import torch
 from pydub import AudioSegment
-from resemblyzer import preprocess_wav, VoiceEncoder
+from resemblyzer import preprocess_wav
 from sklearn.cluster import AgglomerativeClustering
-from app.models.model_registry import get_whisper
+from app.models.model_registry import get_whisper,get_voice_encoder
 from sklearn.preprocessing import normalize
 from sklearn.metrics import silhouette_score
 from datetime import timedelta
@@ -20,13 +19,8 @@ CHUNK_LENGTH_MS = 30000
 FRAME_DURATION = 1.5
 MIN_SPEAKERS = 2
 MAX_SPEAKERS = 5
-WHISPER_MODEL = "tiny"
 
-OUTPUT_DIR = "output"
 CLEANUP_CHUNKS = True
-
-model = get_whisper()
-encoder = VoiceEncoder()
 
 def sec_fmt(s):
     return str(timedelta(seconds=round(s, 3)))
@@ -54,6 +48,8 @@ def embed_frames(frames):
 
     emb_list = []
 
+    encoder = get_voice_encoder()
+
     for f in frames:
         emb_list.append(encoder.embed_utterance(f))
 
@@ -64,8 +60,6 @@ def run_audio_pipeline(AUDIO_FILE, enable_diarization=False):
 
     if not os.path.exists(AUDIO_FILE):
         raise FileNotFoundError(f"Audio file not found: {AUDIO_FILE}")
-
-    os.makedirs(OUTPUT_DIR, exist_ok=True)
 
     chunks = split_audio_to_chunks(AUDIO_FILE, CHUNK_LENGTH_MS)
 
@@ -80,13 +74,15 @@ def run_audio_pipeline(AUDIO_FILE, enable_diarization=False):
         total_audio_duration_ms = len(audio)
     except Exception as e:
         logging.warning(f"Could not determine total audio duration: {e}")
+        
+    fp16 = torch.cuda.is_available()
+    model = get_whisper()
 
     for chunk_idx, chunk_fp in enumerate(chunks):
 
         print(f"\nProcessing chunk {chunk_idx}: {chunk_fp}")
 
-        
-        result = model.transcribe(chunk_fp, fp16=True, verbose=False)
+        result = model.transcribe(chunk_fp, fp16=fp16, verbose=False)
 
         segments = result.get("segments", [])
         chunk_text = result.get("text", "").strip() # Text for the current chunk
@@ -165,7 +161,7 @@ def run_audio_pipeline(AUDIO_FILE, enable_diarization=False):
                     "end_time": sec_fmt(chunk_offset + seg_end),
                     "speaker": f"Speaker_{speaker+1}",
                     "text": seg["text"].strip(),
-                    "confidence": seg.get("avg_logprob", 0.0) 
+                    "confidence": float(np.exp(seg.get("avg_logprob", -10))) 
 
                 })
 
@@ -191,13 +187,4 @@ def run_audio_pipeline(AUDIO_FILE, enable_diarization=False):
         print(f"\nNon-diarized transcript generated as variable.")
         return single_entry_output 
 
-    # JSON OUTPUT for diarization enabled
-    df = pd.DataFrame(rows)
-
-    json_output_path = os.path.join(OUTPUT_DIR, "transcript_with_speakers.json")
-
-    df.to_json(json_output_path, orient="records", indent=4)
-
-    print(f"\nDiarized transcript saved \u2192 {json_output_path}")
-
-    return json_output_path 
+    return rows

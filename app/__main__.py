@@ -1,28 +1,93 @@
-from doc import ext
+from pathlib import Path
+import logging
+import os
+import json
 
-from .pipelines.text_pipeline import process_file
-from .pipelines.image_pipeline import parse_document
+from .pipelines.text_pipeline import run_text_pipeline
+from .pipelines.image_pipeline import run_image_pipeline
 from .pipelines.audio_pipeline import run_audio_pipeline
+from .pipelines.video_pipeline import run_video_pipeline 
+
+def process_file(test_file: str):
+    result = {"success": False, "output_path": None, "error": None}
+    try:
+        ext = Path(test_file).suffix.lower()
+        output_path = None
+        
+        if ext in [".pdf",".txt", ".md", ".log",".docx"]:
+            text_output = run_text_pipeline(test_file)
+            try:
+                if(text_output):
+                    output_path = save_final_output(text_output, test_file)
+            except RuntimeError as e:
+                result["error"] = str(e)
+            
+        elif ext in [".jpg",".jpeg","png"]:
+            image_output = run_image_pipeline(test_file)
+            try:
+                if(image_output):
+                    output_path = save_final_output(image_output, test_file)
+            except RuntimeError as e:
+                result["error"] = str(e)
+            
+        elif ext in [".mp3", ".wav", ".m4a"]:
+            audio_output = run_audio_pipeline(test_file, enable_diarization=True)
+            try:
+                if(audio_output):
+                    output_path = save_final_output(audio_output, test_file)
+            except RuntimeError as e:
+                result["error"] = str(e)
+            
+        elif ext in [".mp4", ".avi", ".mkv"]:
+            video_output = run_video_pipeline(test_file)
+            try:
+                if(video_output):
+                    output_path = save_final_output(video_output, test_file)
+            except RuntimeError as e:
+                result["error"] = str(e)
+
+        else:
+            result["error"] = f"Unsupported file type: {ext}"
+
+        if output_path:
+            result["success"] = True
+            result["output_path"] = output_path
+        else:
+            if result["error"] is None:
+                result["error"] = "Pipeline did not produce output"
+
+    except Exception as e:
+        logging.exception("Unexpected error")
+        if result["error"] is None:
+            result["error"] = str(e)
+
+    return result
+
+def save_final_output(result: dict, original_file: str, base_dir="app/final_json_output"):
+    """
+    Saves final structured output JSON.
+    File naming:
+    originalfilename.json
+
+    Overwrite file content if exists
+    """
+    try:
+        os.makedirs(base_dir, exist_ok=True)
+    
+        file_name = Path(original_file).stem
+        output_file = Path(base_dir) / f"{file_name}.json"
+    
+        with open(output_file, "w", encoding="utf-8") as f:
+            json.dump(result, f, indent=4)
+    
+        logging.info(f"Saved JSON output to: {output_file}")
+    
+        return str(output_file)
+    except Exception as e:
+        logging.error(f"Failed to save '{output_file}': {e}")
+        raise RuntimeError(f"Could not save final output: {e}")
 
 if __name__ == "__main__":
-    try:
-        if ext == [".pdf",".txt", ".md", ".log",".docx"]:
-            #test_file = r"..." # Give File Path
-            #process_file(test_file)
-        elif ext == [".jpg",".jpeg","png"]:
-            #test_file = r"..." # Give File Path
-            #output = parse_document(test_file)
-            #save_final_output(output, test_file)
-        elif ext == [".mp3", ".wav", ".m4a"]:
-            #test_file = r"..." # Give File Path
-            #output = run_audio_pipeline(test_file, enable_diarization=True)
-            #save_final_output(output, test_file)
-        elif ext in [".mp4", ".avi", ".mkv"]:
-            #test_file = r"..." # Give File Path
-            #output = video_parsing_pipeline(test_file)
-            #save_final_output(output, test_file)
-        else:
-            logging.warning(f"Unsupported file type: {ext}")
-            return []  # Return empty list instead of raising
-    except Exception as e:
-        logging.error(f"Failed to load '{file_path}': {e}")
+    test_file = r"C:\Users\kdits\Downloads\Top 10 Best Topics for PPT Presentation  Best Presentation Topics  #ppt - PK TECH (360p, h264).mp4"# Give File Path
+    result = process_file(test_file)
+    logging.info(result)

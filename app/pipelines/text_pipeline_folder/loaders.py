@@ -28,6 +28,7 @@ def table_to_html(table_data):
 # ---------------- PDF ----------------
 def load_pdf(path, image_dir="pdf_images", paragraph_thresh=3):
     blocks = []
+    path = Path(path)
     base_dir = Path(__file__).resolve().parent
     image_dir = base_dir / image_dir
     image_dir.mkdir(exist_ok=True, parents=True)
@@ -146,20 +147,24 @@ def convert_docx_to_pdf(docx_path: str, output_dir: str = "docx2pdf") -> Path:
     Converts DOCX to PDF using Microsoft Word engine.
     Returns path to generated PDF.
     """
-    docx_path = Path(docx_path)
-    base_dir = Path(__file__).resolve().parent
-    output_dir = base_dir / output_dir
-    output_dir.mkdir(exist_ok=True, parents=True)
-
-    pdf_path = output_dir / f"{docx_path.stem}.pdf"
-
     try:
-        convert(str(docx_path), str(pdf_path))
-        logging.info(f"Converted DOCX to PDF: {pdf_path}")
-        return pdf_path
+        docx_path = Path(docx_path)
+        base_dir = Path(__file__).resolve().parent
+        output_dir = base_dir / output_dir
+        output_dir.mkdir(exist_ok=True, parents=True)
+    
+        pdf_path = output_dir / f"{docx_path.stem}.pdf"
+    
+        try:
+            convert(str(docx_path), str(pdf_path))
+            logging.info(f"Converted DOCX to PDF: {pdf_path}")
+            return pdf_path
+        except Exception as e:
+            logging.error(f"DOCX to PDF conversion failed: {e}")
+            return None
     except Exception as e:
-        logging.error(f"DOCX to PDF conversion failed: {e}")
-        return None
+        logging.error(f"Failed to load docx file '{path}': {e}")
+        return []
         
 """
 # ---------------- DOCX ----------------

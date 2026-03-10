@@ -1,7 +1,7 @@
 import os
 import cv2
 import numpy as np
-
+from pathlib import Path
 
 def extract_frames(video_path,
                    output_dir,
@@ -12,7 +12,9 @@ def extract_frames(video_path,
     if not os.path.exists(video_path):
         raise FileNotFoundError(f"Video file not found: {video_path}")
 
-    os.makedirs(output_dir, exist_ok=True)
+    base_dir = Path(__file__).resolve().parent
+    output_dir = base_dir / output_dir
+    output_dir.mkdir(exist_ok=True, parents=True)
 
     cap = cv2.VideoCapture(video_path)
 

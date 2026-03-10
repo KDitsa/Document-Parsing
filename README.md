@@ -50,16 +50,13 @@ Document_Parsing
 │   │   │   ├── file_router.py
 │   │   │   ├── loaders.py
 │   │   │   ├── generate_JSON.py
-│   │   │   ├── pdf_images
-│   │   │   ├── docx2pdf
 |   |   ├── video_pipeline_folder
 │   │   │   ├── audio_exractor.py
 │   │   │   ├── frame_extractor.py
-│   │   ├── audio_pipeline.py
 │   │   ├── text_pipeline.py
 │   │   ├── image_pipeline.py
-│   │   ├── video_pipeline.py
-│   │   └── output
+│   │   ├── audio_pipeline.py
+│   │   └── video_pipeline.py
 │   └── __main__.py
 ├── requirements.txt
 └── README.md
@@ -87,7 +84,41 @@ pip install -r requirements.txt
 > - **Llama.cpp** backend requires a C++ compiler. On Windows, install **Visual Studio with C++ build tools**. On Linux/macOS, ensure `g++` or `clang++` is installed.  
 > - **docx2pdf** requires **Microsoft Word** to be installed, as it uses Word for conversion.
 
-3. **Download the Llama3 model**:
+3. Install FFmpeg (required for audio/video processing):
+
+Windows:
+
+- Download the essentials build from https://www.gyan.dev/ffmpeg/builds/ → ffmpeg-release-essentials.zip.
+
+- Extract to C:\ffmpeg. Inside, you should see C:\ffmpeg\bin\ffmpeg.exe.
+
+- Add C:\ffmpeg\bin to your System PATH:
+
+  - Press Windows Key, search Environment Variables → Edit system environment variables → Environment Variables
+
+  - Under System Variables → Path → Edit → New, add C:\ffmpeg\bin
+
+- Restart your terminal and verify:
+
+```bash
+ffmpeg -version
+```
+
+Linux/macOS:
+
+```bash
+# Ubuntu/Debian
+sudo apt update
+sudo apt install ffmpeg -y
+
+# macOS (with Homebrew)
+brew install ffmpeg
+
+# Verify installation
+ffmpeg -version
+```
+
+4. **Download the Llama3 model**:
 
 Make sure the model is saved in the app/models directory as llama3.gguf:
 
@@ -125,13 +156,18 @@ On Linux/macOS:
 FORCE_CMAKE=1 CMAKE_ARGS="-DGGML_CUDA=ON" pip install --no-cache-dir llama-cpp-python
 ```
 
-### 3️⃣ Notes
+Notes:
 
 - C++ compiler required:
   - Windows: Visual Studio with C++ Build Tools
   - Linux/macOS: g++ or clang++
 - CUDA Toolkit: Required for GPU compilation.
 - NVIDIA GPU Driver: Ensure it matches your CUDA version.
+
+### 3️⃣ Whisper GPU Usage
+
+Whisper automatically uses GPU if PyTorch detects one.  
+No additional configuration is required beyond installing PyTorch with GPU support.
 
 ---
 

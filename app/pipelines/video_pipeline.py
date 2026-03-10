@@ -1,18 +1,24 @@
 import os
 import shutil
+from pathlib import Path
 
 from .video_pipeline_folder.audio_extractor import extract_audio
 from .video_pipeline_folder.frame_extractor import extract_frames
-from audio_pipeline import run_audio_pipeline
-from image_pipeline import parse_document
+from .audio_pipeline import run_audio_pipeline
+from .image_pipeline import run_image_pipeline
+import logging
 
+logging.basicConfig(level=logging.INFO)
 
-def video_parsing_pipeline(video_path):
+def run_video_pipeline(video_path):
 
     if not os.path.exists(video_path):
         raise FileNotFoundError(f"Video file not found: {video_path}")
 
-    audio_output = "temp_audio.wav"
+    audio_temp_output = "temp_audio.wav"
+    base_dir = Path(__file__).resolve().parent
+    video_pipeline_folder = os.path.join(base_dir, "video_pipeline_folder")
+    audio_output = os.path.join(video_pipeline_folder,audio_temp_output)
     frames_folder = "frames"
 
     try:
@@ -35,7 +41,7 @@ def video_parsing_pipeline(video_path):
         
         parsed_doc = []
         for frame_path in frames:
-            result = parse_document(frame_path)
+            result = run_image_pipeline(frame_path)
             parsed_doc.append({
                  "frame": frame_path,
                     "structured_output": result.get("structured_image_output", {}),
@@ -44,12 +50,14 @@ def video_parsing_pipeline(video_path):
         
 
         return {
-            "audio_file": transcript_path,
+            "audio_content": transcript_path,
             "total_frames": len(frames),
             "parsed_frames": parsed_doc
         }
 
-    
+    except Exception as e:
+        logging.error(f"Failed: {e}")
+        return []
     finally:
         
             if os.path.exists(audio_output):

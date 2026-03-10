@@ -1,7 +1,7 @@
 import json
 from pathlib import Path
 from tqdm import tqdm  # optional for progress bar
-from ..image_pipeline import parse_document,_postprocess_llm_output
+from ..image_pipeline import run_image_pipeline,_postprocess_llm_output
 from ...models.model_registry import get_llm
 
 def block_to_json(block):
@@ -11,7 +11,7 @@ def block_to_json(block):
     # Convert block content to markdown-like text for clarity
     if block.type == "image":
         image_path = Path(block.content)
-        markdown = parse_document(image_path)
+        markdown = run_image_pipeline(image_path)
         return markdown
     else:
         markdown = str(block.content)

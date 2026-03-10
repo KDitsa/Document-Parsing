@@ -16,4 +16,3 @@ resemblyzer
 pydub
 scikit-learn
 torch
-librosa
