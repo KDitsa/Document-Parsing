@@ -88,6 +88,6 @@ def save_final_output(result: dict, original_file: str, base_dir="app/final_json
         raise RuntimeError(f"Could not save final output: {e}")
 
 if __name__ == "__main__":
-    test_file = r"C:\Users\kdits\Downloads\Top 10 Best Topics for PPT Presentation  Best Presentation Topics  #ppt - PK TECH (360p, h264).mp4"# Give File Path
-    result = process_file(test_file)
-    logging.info(result)
+    #test_file = r"..."# Give File Path
+    #result = process_file(test_file)
+    #logging.info(result)
