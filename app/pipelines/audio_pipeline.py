@@ -26,20 +26,24 @@ def sec_fmt(s):
     return str(timedelta(seconds=round(s, 3)))
 
 
-def split_audio_to_chunks(path, chunk_length_ms):
+def split_audio_to_chunks(path, chunk_length_ms, output_dir="audio_temp_output"):
 
     audio = AudioSegment.from_file(path)
     chunk_files = []
+
+    base_dir = Path(__file__).resolve().parent
+    output_dir = base_dir / output_dir
+    output_dir.mkdir(parents=True, exist_ok=True)
 
     for i in range(0, len(audio), chunk_length_ms):
 
         chunk = audio[i:i + chunk_length_ms]
 
-        name = f"chunk_{i//chunk_length_ms}.wav"
+        name = output_dir / f"chunk_{i//chunk_length_ms}.wav"
 
         chunk.export(name, format="wav")
 
-        chunk_files.append(name)
+        chunk_files.append(str(name))
 
     return chunk_files
 

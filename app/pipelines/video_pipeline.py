@@ -20,6 +20,7 @@ def run_video_pipeline(video_path):
     video_pipeline_folder = os.path.join(base_dir, "video_pipeline_folder")
     audio_output = os.path.join(video_pipeline_folder,audio_temp_output)
     frames_folder = "frames"
+    frames_folder_path = os.path.join(video_pipeline_folder,frames_folder)
 
     try:
         audio_file = extract_audio(video_path, audio_output)
@@ -40,10 +41,10 @@ def run_video_pipeline(video_path):
 
         
         parsed_doc = []
-        for frame_path in frames:
+        for frame_id, frame_path in enumerate(frames):
             result = run_image_pipeline(frame_path)
             parsed_doc.append({
-                 "frame": frame_path,
+                 "frame": f"Frame {frame_id+1}",
                     "structured_output": result.get("structured_image_output", {}),
                     "ocr_confidence": result.get("ocr_confidence", 0)
             })
@@ -59,9 +60,8 @@ def run_video_pipeline(video_path):
         logging.error(f"Failed: {e}")
         return []
     finally:
-        
-            if os.path.exists(audio_output):
-                os.remove(audio_output)
-            if os.path.exists(frames_folder):
-                shutil.rmtree(frames_folder)
+        if os.path.exists(audio_output):
+            os.remove(audio_output)
+        if os.path.exists(frames_folder_path):
+            shutil.rmtree(frames_folder_path)
 

@@ -76,19 +76,18 @@ def _call_llm(markdown_text: str) -> str:
     llm = get_llm()
 
     prompt = f"""
-    Extract structured data from this document and return valid JSON only.
-    
+    Extract structured data from this text and output valid JSON only.
+
     text:
     {markdown_text}
     
-    Return only JSON.
+    Return valid JSON.
     """
 
     response = llm(
         prompt,
         max_tokens=800,
-        temperature=0,
-        stop=["</s>"]
+        temperature=0
     )
 
     return response["choices"][0]["text"].strip()
@@ -96,22 +95,35 @@ def _call_llm(markdown_text: str) -> str:
 def _postprocess_llm_output(llm_output: str) -> dict:
     """
     Extracts and validates JSON from LLM output.
-    Ensures output starts from { and ends at } only.
-    Returns parsed Python dict.
+    Ensures output starts from { and ends at matching } only.
+    Returns parsed Python dict if possible.
+    If JSON parsing fails, returns the original LLM output.
     """
-    match = re.search(r"\{.*\}", llm_output, re.DOTALL)
+    #match = re.search(r"\{.*\}", llm_output, re.DOTALL)
     
-    if not match:
-        raise ValueError("No valid JSON object found in LLM output.")
+    #if not match:
+    #    raise ValueError("No valid JSON object found in LLM output.")
+    start = llm_output.find("{")
+    if start == -1:
+        return llm_output
 
-    json_str = match.group(0)
+    brace_count = 0
+    json_str = llm_output
+
+    for i in range(start, len(llm_output)):
+        if llm_output[i] == "{":
+            brace_count += 1
+        elif llm_output[i] == "}":
+            brace_count -= 1
+
+        if brace_count == 0:
+            json_str = llm_output[start:i+1]
+            break
 
     try:
-        parsed_json = json.loads(json_str)
-    except json.JSONDecodeError as e:
+        return json.loads(json_str)
+    except json.JSONDecodeError:
         return json_str
-
-    return parsed_json
 
 def run_image_pipeline(image_path: str, output_dir: str = "image_temp_output"):
     """
@@ -151,7 +163,9 @@ def run_image_pipeline(image_path: str, output_dir: str = "image_temp_output"):
                 "ocr_confidence": ocr_confidence
             }
         llm_output = _call_llm(markdown_text)
+        print("LLM_output...before processing:",llm_output)
         structured_json = _postprocess_llm_output(llm_output)
+        print("LLM_output...after processing:",llm_output)
         if(not structured_json):
             with open(json_path, "r", encoding="utf-8") as f:
                 data = json.load(f)
@@ -162,8 +176,8 @@ def run_image_pipeline(image_path: str, output_dir: str = "image_temp_output"):
             "ocr_confidence": ocr_confidence
         }
     except Exception as e:
-        logging.exception(f"Unexpected error in image pipeline: {text_file_path}")
+        logging.exception(f"Unexpected error in image pipeline: {image_path}")
         return {
-            "structured_image_output": null,
+            "structured_image_output": None,
             "ocr_confidence": 0
         }

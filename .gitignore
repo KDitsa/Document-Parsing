@@ -14,3 +14,4 @@ app/pipelines/video_pipeline_folder/temp_audio.wav
 app/pipelines/text_pipeline_folder/pdf_images/
 app/pipelines/text_pipeline_folder/docx2pdf/
 app/pipelines/image_temp_output/
+app/pipelines/audio_temp_output/

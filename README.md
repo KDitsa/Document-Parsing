@@ -50,7 +50,7 @@ Document_Parsing
 │   │   │   ├── file_router.py
 │   │   │   ├── loaders.py
 │   │   │   ├── generate_JSON.py
-|   |   ├── video_pipeline_folder
+│   │   ├── video_pipeline_folder
 │   │   │   ├── audio_exractor.py
 │   │   │   ├── frame_extractor.py
 │   │   ├── text_pipeline.py

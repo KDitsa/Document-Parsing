@@ -31,8 +31,7 @@ def block_to_json(block):
         response = llm(
             prompt,
             max_tokens=800,
-            temperature=0,
-            stop=["</s>"]
+            temperature=0
         )
         llm_output = response["choices"][0]["text"].strip()
         return _postprocess_llm_output(llm_output)

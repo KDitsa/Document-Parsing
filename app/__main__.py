@@ -1,4 +1,5 @@
 from pathlib import Path
+import shutil
 import logging
 import os
 import json
@@ -60,6 +61,16 @@ def process_file(test_file: str):
         logging.exception("Unexpected error")
         if result["error"] is None:
             result["error"] = str(e)
+    finally:
+        base_dir = Path(__file__).resolve().parent
+        pipelines = os.path.join(base_dir, "pipelines")
+        image_output = os.path.join(pipelines, "image_temp_output")
+        audio_output = os.path.join(pipelines, "audio_temp_output")
+
+        if os.path.exists(image_output):
+            shutil.rmtree(image_output)
+        if os.path.exists(audio_output):
+            shutil.rmtree(audio_output)
 
     return result
 

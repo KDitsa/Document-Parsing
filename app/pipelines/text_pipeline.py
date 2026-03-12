@@ -43,7 +43,6 @@ def run_text_pipeline(text_file_path, base_dir="app/final_json_output"):
     finally:
         base_dir = Path(__file__).resolve().parent
         text_pipeline_folder = os.path.join(base_dir, "text_pipeline_folder")
-        image_output = os.path.join(base_dir, "image_temp_output")
         pdf_images_path = os.path.join(text_pipeline_folder, "pdf_images")
         docx_path = os.path.join(text_pipeline_folder, "docx2pdf")
     
@@ -52,7 +51,3 @@ def run_text_pipeline(text_file_path, base_dir="app/final_json_output"):
     
         if os.path.exists(docx_path):
             shutil.rmtree(docx_path)
-
-        if os.path.exists(image_output):
-            shutil.rmtree(image_output)
-                
