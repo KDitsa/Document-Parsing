@@ -185,4 +185,5 @@ python -m app
 
 ## 🌟 Future Improvements
 - Improve LLM prompts for more robust JSON extraction.
+- Improve frame extraction algorithm for efficient key frame extraction from videos.
 - Add interactive GUI or web interface for easier file uploads and result previews.
