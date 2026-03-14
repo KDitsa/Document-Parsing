@@ -128,7 +128,7 @@ def group_slides_histogram(candidates, fps, similarity_threshold=0.9):
 
 
 def extract_slides_chunked(video_path,
-                           output_folder="slides",
+                           output_folder,
                            chunk_seconds=5):
     if not os.path.exists(video_path):
         raise FileNotFoundError(f"Video file not found: {video_path}")
