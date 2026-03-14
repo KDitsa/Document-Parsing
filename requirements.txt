@@ -11,6 +11,7 @@ tqdm
 Pillow
 numpy
 opencv-python
+scikit-image
 openai-whisper
 resemblyzer
 pydub
