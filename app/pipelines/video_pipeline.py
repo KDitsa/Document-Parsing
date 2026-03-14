@@ -3,7 +3,7 @@ import shutil
 from pathlib import Path
 
 from .video_pipeline_folder.audio_extractor import extract_audio
-from .video_pipeline_folder.frame_extractor import extract_frames
+from .video_pipeline_folder.frame_extractor import extract_slides_chunked
 from .audio_pipeline import run_audio_pipeline
 from .image_pipeline import run_image_pipeline
 import logging
@@ -25,12 +25,9 @@ def run_video_pipeline(video_path):
     try:
         audio_file = extract_audio(video_path, audio_output)
     
-        frames = extract_frames(
+        frames = extract_slides_chunked(
             video_path,
-            frames_folder,
-            hist_threshold=0.75,      
-            min_area_ratio=0.30,      # Only accept large changes
-            check_interval=25        # Check every 25th frame
+            frames_folder
         )
 
         
