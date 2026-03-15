@@ -136,10 +136,10 @@ def extract_slides_chunked(video_path,
     frame_paths = []
 
     try:
-
-        if not os.path.exists(output_folder):
-            os.makedirs(output_folder)
-
+        base_dir = Path(__file__).resolve().parent
+        output_folder = base_dir / output_folder
+        output_folder.mkdir(exist_ok=True, parents=True)
+        
         cap = cv2.VideoCapture(video_path)
 
         if not cap.isOpened():
