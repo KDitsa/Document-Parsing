@@ -21,8 +21,7 @@ def run_text_pipeline(text_file_path, base_dir="app/final_json_output"):
         file_path = Path(text_file_path)
     
         if not file_path.exists():
-            logging.error(f"File does not exist: {file_path}")
-            return []
+            raise FileNotFoundError(f"File not found: {file_path}")
     
         logging.info(f"Loading file: {file_path}")
         blocks = safe_load(str(file_path))

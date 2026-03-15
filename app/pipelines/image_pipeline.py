@@ -21,6 +21,10 @@ def _run_ppstructure(image_path: str, output_dir: str) -> Path:
     Runs PPStructureV3 on the image and saves markdown.
     Returns path to generated markdown file.
     """
+    base_dir = Path(__file__).resolve().parent
+    output_dir = base_dir / output_dir
+    output_dir.mkdir(exist_ok=True, parents=True)
+
     logging.info(image_path)
     image_path = str(Path(image_path))  # normalize path
     logging.info(image_path)
@@ -50,6 +54,8 @@ def _calculate_ocr_confidence(json_path: Path) -> float:
     Calculates OCR confidence from PPStructureV3 JSON output.
     Uses rec_scores and optionally rec_boxes for weighted scoring.
     """
+    if not os.path.exists(json_path):
+        raise FileNotFoundError(f"File not found: {json_path}")
     with open(json_path, "r", encoding="utf-8") as f:
         data = json.load(f)
 
@@ -125,7 +131,7 @@ def _postprocess_llm_output(llm_output: str) -> dict:
     except json.JSONDecodeError:
         return json_str
 
-def run_image_pipeline(image_path: str, output_dir: str = "image_temp_output"):
+def run_image_pipeline(image_path: str, output_dir: str = "image_temp_output",from_video=False):
     """
     Full pipeline:
     Image -> PPStructureV3 -> Markdown -> LLM -> JSON output
@@ -135,19 +141,23 @@ def run_image_pipeline(image_path: str, output_dir: str = "image_temp_output"):
         file_path = Path(image_path)
     
         if not file_path.exists():
-            logging.error(f"File does not exist: {file_path}")
-            return []
+            raise FileNotFoundError(f"File not found: {file_path}")
             
         base_dir = Path(__file__).resolve().parent
         output_dir = base_dir / output_dir
         output_dir.mkdir(exist_ok=True, parents=True)
         
-        md_path, json_path = _run_ppstructure(image_path, output_dir)
+        if from_video:
+            image_name = file_path.stem
+            md_path = output_dir / f"{image_name}.md"
+            json_path = output_dir / f"{image_name}_res.json"
+        else:
+            md_path, json_path = _run_ppstructure(image_path, output_dir)
         if(not md_path):
             logging.warning("Failed to Parse")
             return {
-                "structured_image_output": null,
-                "ocr_confidence": 0
+                "structured_image_output": None,
+                "ocr_confidence": None
             }
         
         # Calculate OCR confidence
@@ -163,9 +173,9 @@ def run_image_pipeline(image_path: str, output_dir: str = "image_temp_output"):
                 "ocr_confidence": ocr_confidence
             }
         llm_output = _call_llm(markdown_text)
-        print("LLM_output...before processing:",llm_output)
+        #print("LLM_output...before processing:",llm_output)
         structured_json = _postprocess_llm_output(llm_output)
-        print("LLM_output...after processing:",llm_output)
+        #print("LLM_output...after processing:",llm_output)
         if(not structured_json):
             with open(json_path, "r", encoding="utf-8") as f:
                 data = json.load(f)
@@ -179,5 +189,5 @@ def run_image_pipeline(image_path: str, output_dir: str = "image_temp_output"):
         logging.exception(f"Unexpected error in image pipeline: {image_path}")
         return {
             "structured_image_output": None,
-            "ocr_confidence": 0
+            "ocr_confidence": None
         }
