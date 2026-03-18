@@ -11,10 +11,12 @@ import logging
 
 logging.basicConfig(level=logging.INFO)
 
-def is_only_image_html(text: str) -> bool:
-    # Looks for <img ...> anywhere
-    pattern = r'<img\b[^>]*>'
-    return bool(re.search(pattern, text, re.IGNORECASE))
+def remove_img_src(text: str) -> str:
+    # Remove <div> blocks that contain <img> tags
+    pattern = r'<div[^>]*>\s*<img[^>]*>\s*</div>'
+    cleaned_text = re.sub(pattern, '', text, flags=re.IGNORECASE)
+    
+    return cleaned_text.strip()
 
 def _run_ppstructure(image_path: str, output_dir: str) -> Path:
     """
@@ -163,8 +165,9 @@ def run_image_pipeline(image_path: str, output_dir: str = "image_temp_output",fr
         # Calculate OCR confidence
         ocr_confidence = _calculate_ocr_confidence(json_path)
     
-        markdown_text = _read_markdown(md_path)
-        if(is_only_image_html(markdown_text) or not markdown_text):
+        markdown_read_text = _read_markdown(md_path)
+        markdown_text = remove_img_src(markdown_read_text)
+        if(not markdown_text):
             with open(json_path, "r", encoding="utf-8") as f:
                 data = json.load(f)
             structured_json =  data.get("parsing_res_list", {})

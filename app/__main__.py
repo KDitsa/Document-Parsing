@@ -23,7 +23,7 @@ def process_file(test_file: str):
             except RuntimeError as e:
                 result["error"] = str(e)
             
-        elif ext in [".jpg",".jpeg","png"]:
+        elif ext in [".jpg",".jpeg",".png"]:
             image_output = run_image_pipeline(test_file)
             try:
                 if(image_output):
@@ -31,7 +31,7 @@ def process_file(test_file: str):
             except RuntimeError as e:
                 result["error"] = str(e)
             
-        elif ext in [".mp3", ".wav", ".m4a"]:
+        elif ext in [".mp3", ".wav", ".flac", ".m4a"]:
             audio_output = run_audio_pipeline(test_file, enable_diarization=True)
             try:
                 if(audio_output):
@@ -39,7 +39,7 @@ def process_file(test_file: str):
             except RuntimeError as e:
                 result["error"] = str(e)
             
-        elif ext in [".mp4", ".avi", ".mkv"]:
+        elif ext in [".mp4", ".mov", ".mkv"]:
             video_output = run_video_pipeline(test_file)
             try:
                 if(video_output):
