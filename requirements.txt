@@ -17,3 +17,5 @@ resemblyzer
 pydub
 scikit-learn
 torch
+python-magic
+python-magic-bin

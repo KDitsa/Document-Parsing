@@ -2,6 +2,7 @@ from pathlib import Path
 import shutil
 import logging
 import os
+os.environ["PADDLE_PDX_DISABLE_MODEL_SOURCE_CHECK"] = "True"
 import json
 
 from .pipelines.text_pipeline import run_text_pipeline
@@ -9,13 +10,52 @@ from .pipelines.image_pipeline import run_image_pipeline
 from .pipelines.audio_pipeline import run_audio_pipeline
 from .pipelines.video_pipeline import run_video_pipeline 
 
+import magic
+
+def detect_mime(file_path: str):
+    try:
+        mime = magic.from_file(file_path, mime=True)
+        return mime
+    except Exception as e:
+        return None
+
 def process_file(test_file: str):
     result = {"success": False, "output_path": None, "error": None}
+    mime = detect_mime(test_file)
+    print(mime)
+    if mime is None:
+        result["error"] = "Could not determine file type"
+        return result
+
+    TEXT_MIME = {
+        "application/pdf",
+        "text/plain",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    }
+
+    IMAGE_MIME = {
+        "image/jpeg",
+        "image/png"
+    }
+
+    AUDIO_MIME = {
+        "audio/mpeg",      
+        "audio/wav",
+        "audio/x-wav",
+        "audio/flac",
+        "audio/mp4"
+    }
+
+    VIDEO_MIME = {
+        "video/mp4",
+        "video/quicktime",
+        "video/x-matroska"
+    }
+
     try:
-        ext = Path(test_file).suffix.lower()
         output_path = None
         
-        if ext in [".pdf",".txt", ".md", ".log",".docx"]:
+        if mime in TEXT_MIME:
             text_output = run_text_pipeline(test_file)
             try:
                 if(text_output):
@@ -23,7 +63,7 @@ def process_file(test_file: str):
             except RuntimeError as e:
                 result["error"] = str(e)
             
-        elif ext in [".jpg",".jpeg",".png"]:
+        elif mime in IMAGE_MIME:
             image_output = run_image_pipeline(test_file)
             try:
                 if(image_output):
@@ -31,7 +71,7 @@ def process_file(test_file: str):
             except RuntimeError as e:
                 result["error"] = str(e)
             
-        elif ext in [".mp3", ".wav", ".flac", ".m4a"]:
+        elif mime in AUDIO_MIME:
             audio_output = run_audio_pipeline(test_file, enable_diarization=True)
             try:
                 if(audio_output):
@@ -39,7 +79,7 @@ def process_file(test_file: str):
             except RuntimeError as e:
                 result["error"] = str(e)
             
-        elif ext in [".mp4", ".mov", ".mkv"]:
+        elif mime in VIDEO_MIME:
             video_output = run_video_pipeline(test_file)
             try:
                 if(video_output):

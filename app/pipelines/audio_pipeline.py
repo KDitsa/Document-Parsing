@@ -1,11 +1,10 @@
 import os
 import numpy as np
-#import pandas as pd
 import torch
 from pydub import AudioSegment
 from resemblyzer import preprocess_wav
 from sklearn.cluster import AgglomerativeClustering
-from app.models.model_registry import get_whisper,get_voice_encoder
+from ..models.model_registry import get_whisper,get_voice_encoder
 from sklearn.preprocessing import normalize
 from sklearn.metrics import silhouette_score
 from datetime import timedelta
