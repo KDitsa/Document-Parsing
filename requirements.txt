@@ -13,9 +13,11 @@ numpy
 opencv-python
 scikit-image
 openai-whisper
-resemblyzer
-pydub
+speechbrain
+librosa
 scikit-learn
 torch
 python-magic
 python-magic-bin
+soundfile
+torchaudio

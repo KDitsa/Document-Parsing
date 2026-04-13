@@ -1,193 +1,151 @@
-import os
-import numpy as np
-import torch
-from pydub import AudioSegment
-from resemblyzer import preprocess_wav
-from sklearn.cluster import AgglomerativeClustering
 from ..models.model_registry import get_whisper,get_voice_encoder
-from sklearn.preprocessing import normalize
-from sklearn.metrics import silhouette_score
-from datetime import timedelta
-import logging
-from pathlib import Path
-import json
+import torch
+import numpy as np
+import librosa
+import whisper
+from sklearn.cluster import SpectralClustering
+from scipy.sparse.csgraph import laplacian
+from sklearn.metrics import pairwise_distances
 
-logging.basicConfig(level=logging.INFO)
+def sec_fmt(seconds):
+    """Helper to format seconds into a clean string or float."""
+    return round(seconds, 3)
 
-CHUNK_LENGTH_MS = 30000
-FRAME_DURATION = 1.5
-MIN_SPEAKERS = 2
-MAX_SPEAKERS = 5
+def merge_segments(json_output):
+    """
+    Merges consecutive segments if they share the same speaker.
+    """
+    if not json_output:
+        return []
 
-CLEANUP_CHUNKS = True
+    merged = []
+    # Start with the first segment
+    current_entry = json_output[0].copy()
 
-def sec_fmt(s):
-    return str(timedelta(seconds=round(s, 3)))
-
-
-def split_audio_to_chunks(path, chunk_length_ms, output_dir="audio_temp_output"):
-
-    audio = AudioSegment.from_file(path)
-    chunk_files = []
-
-    base_dir = Path(__file__).resolve().parent
-    output_dir = base_dir / output_dir
-    output_dir.mkdir(parents=True, exist_ok=True)
-
-    for i in range(0, len(audio), chunk_length_ms):
-
-        chunk = audio[i:i + chunk_length_ms]
-
-        name = output_dir / f"chunk_{i//chunk_length_ms}.wav"
-
-        chunk.export(name, format="wav")
-
-        chunk_files.append(str(name))
-
-    return chunk_files
-
-
-def embed_frames(frames):
-
-    emb_list = []
-
-    encoder = get_voice_encoder()
-
-    for f in frames:
-        emb_list.append(encoder.embed_utterance(f))
-
-    return np.vstack(emb_list)
-
-
-def run_audio_pipeline(AUDIO_FILE, enable_diarization=False):
-
-    if not os.path.exists(AUDIO_FILE):
-        raise FileNotFoundError(f"Audio file not found: {AUDIO_FILE}")
-
-    chunks = split_audio_to_chunks(AUDIO_FILE, CHUNK_LENGTH_MS)
-
-    rows = [] # For diarized output
-    full_combined_text = "" # For non-diarized output (entire text)
-    overall_confidence_sum = 0 # To accumulate avg_logprob for overall confidence
-    overall_segment_count = 0 # To count total segments for overall confidence
-
-    total_audio_duration_ms = 0
-    try:
-        audio = AudioSegment.from_file(AUDIO_FILE)
-        total_audio_duration_ms = len(audio)
-    except Exception as e:
-        logging.warning(f"Could not determine total audio duration: {e}")
-        
-    fp16 = torch.cuda.is_available()
-    model = get_whisper()
-
-    for chunk_idx, chunk_fp in enumerate(chunks):
-
-        print(f"\nProcessing chunk {chunk_idx}: {chunk_fp}")
-
-        result = model.transcribe(chunk_fp, fp16=fp16, verbose=False)
-
-        segments = result.get("segments", [])
-        chunk_text = result.get("text", "").strip() # Text for the current chunk
-
-        
-        for seg in segments:
-            overall_confidence_sum += np.exp(seg.get("avg_logprob", -10))
-            overall_segment_count += 1
-
-        if not enable_diarization:
-            full_combined_text += chunk_text + " " # Accumulate text
-
+    for next_seg in json_output[1:]:
+        # If the speaker is the same, merge them
+        if next_seg['speaker'] == current_entry['speaker']:
+            current_entry['end_time'] = next_seg['end_time']
+            # Join the text with a space
+            current_entry['text'] += " " + next_seg['text']
+            # Average the confidence (optional, but keeps it representative)
+            current_entry['confidence'] = round((current_entry['confidence'] + next_seg['confidence']) / 2, 4)
         else:
+            # If speaker changes, push the finished entry and start a new one
+            merged.append(current_entry)
+            current_entry = next_seg.copy()
 
-            wav = preprocess_wav(chunk_fp)
+    # Append the last remaining entry
+    merged.append(current_entry)
+    return merged
 
-            sr = 16000
-            frame_len = int(FRAME_DURATION * sr)
-
-            frames = [
-                wav[i:i + frame_len]
-                for i in range(0, len(wav), frame_len)
-                if len(wav[i:i + frame_len]) > 0
-            ]
-
-            if len(frames) == 0:
-                continue
-
-            embeddings = embed_frames(frames)
-
-            embeddings = normalize(embeddings)
-
-            best_k = MIN_SPEAKERS
-            best_score = -1
-
-            for k in range(MIN_SPEAKERS, min(MAX_SPEAKERS, len(frames)) + 1):
-
-                try:
-
-                    labels_test = AgglomerativeClustering(n_clusters=k).fit_predict(embeddings)
-
-                    if len(set(labels_test)) < 2:
-                        continue
-
-                    score = silhouette_score(embeddings, labels_test)
-
-                    if score > best_score:
-                        best_score = score
-                        best_k = k
-
-                except:
-                    continue
-
-            clustering = AgglomerativeClustering(n_clusters=best_k)
-
-            frame_labels = clustering.fit_predict(embeddings)
-
-            chunk_offset = chunk_idx * (CHUNK_LENGTH_MS / 1000.0)
-
-            for seg in segments:
-
-                seg_start = seg["start"]
-                seg_end = seg["end"]
-
-                seg_mid = (seg_start + seg_end) / 2
-
-                frame_idx = int(seg_mid // FRAME_DURATION)
-
-                frame_idx = max(0, min(frame_idx, len(frame_labels) - 1))
-
-                speaker = frame_labels[frame_idx]
-
-                rows.append({
-
-                    "start_time": sec_fmt(chunk_offset + seg_start),
-                    "end_time": sec_fmt(chunk_offset + seg_end),
-                    "speaker": f"Speaker_{speaker+1}",
-                    "text": seg["text"].strip(),
-                    "confidence": float(np.exp(seg.get("avg_logprob", -10))) 
-
-                })
-
-
-        if CLEANUP_CHUNKS:
-            try:
-                os.remove(chunk_fp)
-            except:
-                pass
-
+def estimate_speakers(embeddings, max_speakers=8):
+    """
+    Guesses the number of speakers using the Eigengap Heuristic.
+    Looks for the largest 'jump' in eigenvalues to find the natural cluster count.
+    """
+    if len(embeddings) < 2:
+        return 1
     
-    overall_confidence = overall_confidence_sum / overall_segment_count if overall_segment_count > 0 else 0.0
+    # Calculate Affinity Matrix (Cosine Similarity)
+    # Spectral clustering needs similarity (1 - distance)
+    S = 1 - pairwise_distances(embeddings, metric='cosine')
+    
+    # Compute Normalized Laplacian
+    L = laplacian(S, normed=True)
+    eigenvalues, _ = np.linalg.eigh(L)
+    
+    # The Eigengap Heuristic: find the largest difference between consecutive eigenvalues
+    # We skip the first eigenvalue as it's always 0
+    gaps = np.diff(eigenvalues[:max_speakers + 1])
+    
+    # The index of the max gap + 1 gives us the estimated K
+    num_speakers = np.argmax(gaps) + 1
+    return max(1, num_speakers)
 
-    if not enable_diarization:
-        # Construct the single-entry output for non-diarized transcript
-        single_entry_output = [{
-            "start_time": "0:00:00.000",
-            "end_time": sec_fmt(total_audio_duration_ms / 1000.0),
-            "speaker": None,
-            "text": full_combined_text.strip(),
-            "overall_confidence": overall_confidence 
-        }]
-        print(f"\nNon-diarized transcript generated as variable.")
-        return single_entry_output 
+def get_stable_embedding(audio, sr, start, end):
+    """Extracts and L2-normalizes speaker embeddings with safety checks."""
+    start_samp, end_samp = int(start * sr), int(end * sr)
+    signal = audio[start_samp:end_samp]
+    
+    if len(signal) < 1600 or np.max(np.abs(signal)) < 0.001: 
+        return None
+    classifier = get_voice_encoder()
+    device = "cuda" if torch.cuda.is_available() else "cpu"
 
-    return rows
+    with torch.no_grad():
+        emb = classifier.encode_batch(torch.tensor(signal).unsqueeze(0).to(device)).cpu().numpy().flatten()
+        
+        # Check for NaN/Inf (happens with corrupted audio or pure silence)
+        if np.any(np.isnan(emb)) or np.any(np.isinf(emb)):
+            return None
+            
+        norm = np.linalg.norm(emb)
+        if norm < 1e-6: return None 
+        
+        return emb / norm
+
+def run_audio_pipeline(audio_path):
+    print("--- Starting Pipeline ---")
+    y, sr = librosa.load(audio_path, sr=16000)
+    
+    # Step 1: Transcribe
+    print("Transcribing with Whisper Tiny...")
+    whisper_model = get_whisper()
+    result = whisper_model.transcribe(audio_path, beam_size=5)
+    segments = result['segments'] 
+    
+    embeddings, valid_segs = [], []
+    
+    # Step 2: Extract Embeddings
+    print(f"Extracting embeddings for {len(segments)} segments...")
+    for i,seg in enumerate(segments):
+        emb = get_stable_embedding(y, sr, seg['start'], seg['end'])
+        if emb is not None:
+            embeddings.append(emb)
+            valid_segs.append(i)
+    
+    if not embeddings:
+        print("No valid speech detected.")
+        return
+
+    X = np.array(embeddings)
+    
+    # Step 3: Auto-Guess Speaker Count
+    print("Analyzing vocal patterns to estimate speaker count...")
+    num_speakers = estimate_speakers(X)
+    print(f"Detected Estimated Speakers: {num_speakers}")
+    
+    # Step 4: Spectral Clustering with Auto-K
+    clusterer = SpectralClustering(
+        n_clusters=num_speakers, 
+        affinity='cosine', 
+        assign_labels='cluster_qr', 
+        random_state=42
+    )
+    labels = clusterer.fit_predict(X)
+    speaker_map = {idx: labels[i] for i, idx in enumerate(valid_segs)}
+    # Step 5: Final Output
+    json_output = []
+    chunk_offset = 0 # Usually 0 unless you are processing audio in manual chunks
+
+    for i, seg in enumerate(segments):
+        # Get the assigned speaker from our final_labels mapping
+        speaker_val = speaker_map.get(i, 0)
+        
+        # Calculate confidence from logprob (Standard Whisper metric)
+        # If avg_logprob is missing, we default to a low value
+        logprob = seg.get("avg_logprob", -10)
+        confidence = float(np.exp(seg.get("avg_logprob", -10)))        
+        entry = {
+            "start_time": sec_fmt(chunk_offset + seg['start']),
+            "end_time": sec_fmt(chunk_offset + seg['end']),
+            "speaker": f"Speaker_{speaker_val + 1}",
+            "text": seg["text"].strip(),
+            "confidence": round(confidence, 4)
+        }
+        json_output.append(entry)
+        
+    final_merged_output = merge_segments(json_output)
+    
+    return final_merged_output

@@ -1,6 +1,11 @@
 import logging
 from pathlib import Path
+import torchaudio
 
+if not hasattr(torchaudio, "set_audio_backend"):
+    def dummy_backend(x): pass
+    torchaudio.set_audio_backend = dummy_backend
+    
 logging.basicConfig(level=logging.INFO)
 
 _llm_model = None
@@ -85,8 +90,10 @@ def get_voice_encoder():
     if _encoder is None:
         try:
             logging.info("Loading VoiceEncoder...")
-            from resemblyzer import VoiceEncoder
-            _encoder = VoiceEncoder()
+            from speechbrain.inference.speaker import EncoderClassifier
+            import torch
+            device = "cuda" if torch.cuda.is_available() else "cpu"
+            _encoder = EncoderClassifier.from_hparams(source="speechbrain/spkrec-ecapa-voxceleb", run_opts={"device": device})
             logging.info("VoiceEncoder loaded.")
         except Exception as e:
             logging.exception("Failed to load VoiceEncoder")

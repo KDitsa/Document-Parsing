@@ -9,6 +9,7 @@ from .pipelines.text_pipeline import run_text_pipeline
 from .pipelines.image_pipeline import run_image_pipeline
 from .pipelines.audio_pipeline import run_audio_pipeline
 from .pipelines.video_pipeline import run_video_pipeline 
+from .braille import convert_to_braille
 
 import magic
 
@@ -72,7 +73,7 @@ def process_file(test_file: str):
                 result["error"] = str(e)
             
         elif mime in AUDIO_MIME:
-            audio_output = run_audio_pipeline(test_file, enable_diarization=True)
+            audio_output = run_audio_pipeline(test_file)
             try:
                 if(audio_output):
                     output_path = save_final_output(audio_output, test_file)
@@ -142,3 +143,4 @@ if __name__ == "__main__":
     #test_file = r"..."# Give File Path
     #result = process_file(test_file)
     #logging.info(result)
+    #convert_to_braille(test_file)

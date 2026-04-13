@@ -47,7 +47,6 @@ def generate_blocks_json(blocks):
     all_block_json = []
     for block in tqdm(blocks, desc="Processing blocks"):
         block_json = {
-            "id": block.id,
             "type": block.type,
             "page_number": block.page_number,
             "bbox": block.bbox,

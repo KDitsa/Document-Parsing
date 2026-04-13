@@ -3,7 +3,6 @@ from typing import Optional, Tuple, Union, Dict
 
 @dataclass
 class DocumentBlock:
-    id: str
     type: str  # "text", "table", "image"
     content: Union[str, Dict]
     page_number: Optional[int] = None

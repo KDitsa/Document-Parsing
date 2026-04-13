@@ -1,17 +1,12 @@
 import os
 import pdfplumber
 import json
-import uuid
 from docx2pdf import convert
 from pathlib import Path
 from .DocumentBlock import DocumentBlock
 import logging
 
 logging.basicConfig(level=logging.INFO)
-
-# ---------------- Utility ----------------
-def generate_id():
-    return str(uuid.uuid4())
 
 # ------------- Table to HTML -------------  
 def table_to_html(table_data):
@@ -52,7 +47,6 @@ def load_pdf(path, image_dir="pdf_images", paragraph_thresh=3):
                         table_html_data = ""
                         
                     page_blocks.append(DocumentBlock(
-                        generate_id(),
                         "table",
                         table_html_data,
                         page_number=page_num,
@@ -89,7 +83,6 @@ def load_pdf(path, image_dir="pdf_images", paragraph_thresh=3):
                             para_text = " ".join(word['text'] for word in current_para)
         
                             page_blocks.append(DocumentBlock(
-                                generate_id(),
                                 "text",
                                 para_text,
                                 page_number=page_num,
@@ -108,7 +101,6 @@ def load_pdf(path, image_dir="pdf_images", paragraph_thresh=3):
                     para_text = " ".join(word['text'] for word in current_para)
     
                     page_blocks.append(DocumentBlock(
-                        generate_id(),
                         "text",
                         para_text,
                         page_number=page_num,
@@ -123,7 +115,6 @@ def load_pdf(path, image_dir="pdf_images", paragraph_thresh=3):
                         page.crop(bbox).to_image(resolution=150).save(image_path)
     
                         page_blocks.append(DocumentBlock(
-                            generate_id(),
                             "image",
                             str(image_path.resolve()),
                             page_number=page_num,
@@ -184,7 +175,6 @@ def load_docx(path, image_dir="docx_images"):
             text = para.text.strip()
             if text:
                 blocks.append(DocumentBlock(
-                    generate_id(),
                     "text",
                     text,
                     page_number=1,
@@ -205,7 +195,6 @@ def load_docx(path, image_dir="docx_images"):
                 table_html_data = table_to_html(table_data)
             
             blocks.append(DocumentBlock(
-                generate_id(),
                 "table",
                 table_html_data,
                 page_number=1,
@@ -224,7 +213,6 @@ def load_docx(path, image_dir="docx_images"):
                         f.write(img)
     
                     blocks.append(DocumentBlock(
-                        generate_id(),
                         "image",
                         str(img_name.resolve()),
                         page_number=1,
@@ -247,7 +235,7 @@ def load_text(path):
         with open(path, "r", encoding="utf-8") as f:
             content = f.read()
         # Treat as single block with approximate bbox
-        return [DocumentBlock(generate_id(), "text", content, page_number=1, bbox=[0,0,1000,10])]
+        return [DocumentBlock("text", content, page_number=1, bbox=[0,0,1000,10])]
     except Exception as e:
         logging.error(f"Failed to load text file '{path}': {e}")
         return []

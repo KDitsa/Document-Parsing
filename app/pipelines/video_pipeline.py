@@ -7,6 +7,7 @@ from .video_pipeline_folder.frame_extractor import extract_slides_chunked
 from .audio_pipeline import run_audio_pipeline
 from .image_pipeline import run_image_pipeline, _run_ppstructure
 import logging
+from difflib import SequenceMatcher
 
 logging.basicConfig(level=logging.INFO)
 
@@ -17,6 +18,19 @@ def _get_first_two_lines(md_path: Path) -> str:
         return "".join(lines[:2]).strip()
     except:
         return ""
+
+def similarity(a, b):
+    if not a or not b:
+        return 0.0
+
+    # take smaller length
+    min_len = min(len(a), len(b))
+
+    # trim both to same size
+    a_trim = a[:min_len]
+    b_trim = b[:min_len]
+
+    return SequenceMatcher(None, a_trim, b_trim).ratio()
 
 def run_video_pipeline(video_path):
 
@@ -40,10 +54,7 @@ def run_video_pipeline(video_path):
         )
 
         if os.path.exists(audio_file):
-            transcript_path = run_audio_pipeline(
-                audio_file,
-                enable_diarization=False
-            )
+            transcript_path = run_audio_pipeline(audio_file)
 
         
         parsed_doc = []
@@ -62,7 +73,7 @@ def run_video_pipeline(video_path):
                 md_path_next, json_path_next = _run_ppstructure(frames[j], "image_temp_output")
                 header_j = _get_first_two_lines(md_path_next)
 
-                if header_i == header_j:
+                if similarity(header_i, header_j) >= 0.8:
                     j += 1
                 else:
                     break
