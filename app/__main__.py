@@ -12,6 +12,7 @@ from .pipelines.video_pipeline import run_video_pipeline
 from .braille import convert_to_braille
 
 import magic
+import time
 
 def detect_mime(file_path: str):
     try:
@@ -21,6 +22,7 @@ def detect_mime(file_path: str):
         return None
 
 def process_file(test_file: str):
+    start_time = time.time()
     result = {"success": False, "output_path": None, "error": None}
     mime = detect_mime(test_file)
     print(mime)
@@ -113,6 +115,11 @@ def process_file(test_file: str):
         if os.path.exists(audio_output):
             shutil.rmtree(audio_output)
 
+    end_time = time.time()
+    elapsed = end_time - start_time
+    hours, rem = divmod(elapsed, 3600)
+    minutes, seconds = divmod(rem, 60)
+    print(f"Processing Time: {int(hours):02d}:{int(minutes):02d}:{int(seconds):02d}")
     return result
 
 def save_final_output(result: dict, original_file: str, base_dir="app/final_json_output"):
@@ -143,4 +150,4 @@ if __name__ == "__main__":
     #test_file = r"..."# Give File Path
     #result = process_file(test_file)
     #logging.info(result)
-    #convert_to_braille(test_file)
+    #convert_to_braille(r"...") # Give JSON File Path
