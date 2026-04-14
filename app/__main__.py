@@ -91,7 +91,7 @@ def process_file(test_file: str):
                 result["error"] = str(e)
 
         else:
-            result["error"] = f"Unsupported file type: {ext}"
+            result["error"] = f"Unsupported file type: {mime}"
 
         if output_path:
             result["success"] = True

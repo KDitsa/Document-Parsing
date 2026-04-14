@@ -1,8 +1,6 @@
 import os
 import json
 from pathlib import Path
-from paddleocr import PPStructureV3
-from llama_cpp import Llama
 import re
 from ..models.model_registry import get_ppstructure
 from ..models.model_registry import get_llm
