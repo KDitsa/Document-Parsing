@@ -1,6 +1,6 @@
 # A Multimodal AI-Powered Hybrid Approach to Document Parsing
 
-A Python-based multimodal document parsing system that extracts structured data from **PDF, DOCX, TXT, images, audio, and video files**. The pipeline leverages **PPStructureV3** for OCR and document layout parsing, and **Llama** (via `llama-cpp-python`) for generating structured JSON output.
+A Python-based multimodal document parsing system that extracts structured data from **PDF, DOCX, TXT, images, audio, and video files**. The pipeline leverages **PPStructureV3** for OCR and document layout parsing, **SpeechBrain** for audio embedding and speaker processing, and **Llama** (via `llama-cpp-python`) for generating structured JSON output.
 
 ---
 
@@ -27,11 +27,11 @@ A Python-based multimodal document parsing system that extracts structured data 
 - ⚡ **Singleton Model Loading**  
   LLM, OCR and Whisper models are loaded only once for maximum efficiency.
 
+- ⠿ **Braille Document Parsing**
+Converts structured JSON output into Braille code for visually impaired users.
+
 - 🛡️ **Safe Loading**  
   Gracefully handles unsupported file types or corrupted files.
-
-- ⏱️ **Timestamped JSON Output**  
-  Automatically saves outputs with timestamps to avoid filename collisions.
 
 ---
 
@@ -184,6 +184,8 @@ python -m app
 ---
 
 ## 🌟 Future Improvements
-- Improve LLM prompts for more robust JSON extraction.
-- Improve frame extraction algorithm for efficient key frame extraction from videos.
-- Add interactive GUI or web interface for easier file uploads and result previews.
+- 🔧 **Model Fine-Tuning**<br>
+  Improve performance by fine-tuning models on domain-specific datasets and leveraging GPU acceleration when resources are available.
+
+- 🖥️ **Interactive UI Development**<br>
+  Build a user-friendly GUI or web interface to enable seamless file uploads and real-time preview of structured outputs.
