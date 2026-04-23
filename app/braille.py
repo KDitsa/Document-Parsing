@@ -28,7 +28,7 @@ BRAILLE_DIGITS = {
 }
 
 BRAILLE_PUNCTUATION = {
-    ':':'⠒','.':'⠲','?':'⠦','!':'⠖','-':'⠤','(':'⠶',')':'⠶'
+    ':':'⠒','.':'⠲','?':'⠦','!':'⠖','-':'⠤','(':'⠶',')':'⠶',',':'⠂'
 }
 
 NUMBER_PREFIX = '⠼'   # indicates start of number
@@ -42,7 +42,6 @@ def normalize(text):
             .replace("]", "")
             .replace("'", "")
             .replace('"', "")
-            .replace(",", "\n")
             .replace("_", " ")
     )
 
