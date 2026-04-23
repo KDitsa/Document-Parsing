@@ -28,7 +28,7 @@ BRAILLE_DIGITS = {
 }
 
 BRAILLE_PUNCTUATION = {
-    ':':'⠒','.':'⠲'
+    ':':'⠒','.':'⠲','?':'⠦','!':'⠖','-':'⠤','(':'⠶',')':'⠶'
 }
 
 NUMBER_PREFIX = '⠼'   # indicates start of number
