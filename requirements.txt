@@ -20,3 +20,4 @@ torch
 python-magic-bin
 soundfile
 torchaudio
+streamlit

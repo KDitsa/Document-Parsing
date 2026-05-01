@@ -7,7 +7,7 @@ if not hasattr(torchaudio, "set_audio_backend"):
     torchaudio.set_audio_backend = dummy_backend
     
 logging.basicConfig(level=logging.INFO)
-
+logging.getLogger("whisper").setLevel(logging.ERROR)
 _llm_model = None
 _ppstructure = None
 _whisper = None
@@ -90,6 +90,15 @@ def get_voice_encoder():
     if _encoder is None:
         try:
             logging.info("Loading VoiceEncoder...")
+            import os
+            import sys
+            from unittest.mock import MagicMock
+            # Block the k2 warning by faking the module
+            for name in ["flair", "flair.data", "flair.embeddings", "flair.models"]:
+                sys.modules[name] = MagicMock()
+            sys.modules["k2"] = MagicMock()
+            sys.modules["pyctcdecode"] = MagicMock()
+            sys.modules["kenlm"] = MagicMock()
             from speechbrain.inference.speaker import EncoderClassifier
             import torch
             device = "cuda" if torch.cuda.is_available() else "cpu"

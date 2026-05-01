@@ -92,7 +92,7 @@ def run_audio_pipeline(audio_path):
     # Step 1: Transcribe
     print("Transcribing with Whisper Tiny...")
     whisper_model = get_whisper()
-    result = whisper_model.transcribe(audio_path, beam_size=5)
+    result = whisper_model.transcribe(audio_path, beam_size=5, language="en")
     segments = result['segments'] 
     
     embeddings, valid_segs = [], []
