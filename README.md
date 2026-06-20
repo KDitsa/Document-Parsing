@@ -1,9 +1,7 @@
-# A Multimodal AI-Powered Hybrid Approach to Document Parsing
-
-A Python-based multimodal document parsing system that extracts structured data from **PDF, DOCX, TXT, images, audio, and video files**. The pipeline leverages **PPStructureV3** for OCR and document layout parsing, **SpeechBrain** for audio embedding and speaker processing, and **Llama** (via `llama-cpp-python`) for generating structured JSON output.
+# 📄 A Multimodal AI-Powered Hybrid Approach to Document Parsing
+A Python-based multimodal document parsing system capable of extracting structured information from **documents, images, audio, and video files** and converting the extracted content into machine-readable JSON. The framework combines **PPStructureV3** for OCR and layout analysis, **Whisper** for speech transcription, **SpeechBrain** for audio embedding and speaker processing, and **Meta Llama 3 8B Instruct** (via "llama-cpp-python") to generate structured outputs. Additionally, the system supports **Braille conversion**, enabling accessibility for visually impaired users.
 
 ---
-
 ## 🚀 Features
 
 - 🧩 **Multimodal Input Support**  
@@ -19,7 +17,7 @@ A Python-based multimodal document parsing system that extracts structured data 
   Llama3 converts parsed content into structured JSON.
 
 - 🎤**Efficient Audio Transcribing along with Speaker Diarization**
-  Audio files are efficiently parsed using whisper, resemblyzer and Agglomerative Clustering.
+  Audio files are efficiently parsed using whisper, resemblyzer and Spectral Clustering.
 
 - 🎥**Implemented Effective Video Parsing Pipeline**
   An efficient video parsing pipeline has been implemented to extract structured JSON output from video files.
@@ -34,33 +32,17 @@ Converts structured JSON output into Braille code for visually impaired users.
   Gracefully handles unsupported file types or corrupted files.
 
 ---
+## 🧠 System Architecture
 
-## 📁 Directory Structure
-```bash
-Document_Parsing
-├── app
-│   ├── user_uploads               # Uploaded files
-│   ├── final_json_output          # Final JSON results
-│   ├── models
-│   │   ├── llama3.gguf
-│   │   ├── model_registry.py      # Singleton loaders for LLM and PPStructure
-│   ├── pipelines
-│   │   ├── text_pipeline_folder
-│   │   │   ├── DocumentBlock.py
-│   │   │   ├── file_router.py
-│   │   │   ├── loaders.py
-│   │   │   ├── generate_JSON.py
-│   │   ├── video_pipeline_folder
-│   │   │   ├── audio_exractor.py
-│   │   │   ├── frame_extractor.py
-│   │   ├── text_pipeline.py
-│   │   ├── image_pipeline.py
-│   │   ├── audio_pipeline.py
-│   │   └── video_pipeline.py
-│   └── __main__.py
-├── requirements.txt
-└── README.md
-```
+![System Architecture](images/architecture.png)
+
+---
+
+## 🖼️ User Interface
+
+![Interface](images/interface.png)
+
+Interactive interface for uploading files and visualizing structured outputs.
 
 ---
 
@@ -184,8 +166,12 @@ python -m app
 ---
 
 ## 🌟 Future Improvements
-- 🔧 **Model Fine-Tuning**<br>
-  Improve performance by fine-tuning models on domain-specific datasets and leveraging GPU acceleration when resources are available.
+- Improve performance by **fine-tuning models** on **domain-specific datasets** and leveraging **GPU acceleration** when resources are available.
+- **Retrieval-Augmented Generation (RAG)** support for querying parsed documents.
+- **Multilingual** document parsing.
 
-- 🖥️ **Interactive UI Development**<br>
-  Build a user-friendly GUI or web interface to enable seamless file uploads and real-time preview of structured outputs.
+---
+
+## 📝 Closing Thoughts
+
+This project demonstrates a hybrid multimodal approach to document parsing by integrating OCR, speech processing, video understanding, and large language models into a unified framework. By supporting multiple input modalities and providing structured JSON outputs with accessibility features such as Braille conversion, the system aims to bridge the gap between unstructured data and machine-readable knowledge while enabling more inclusive information access.
