@@ -1,5 +1,5 @@
 # 📄 A Multimodal AI-Powered Hybrid Approach to Document Parsing
-A Python-based multimodal document parsing system capable of extracting structured information from **documents, images, audio, and video files** and converting the extracted content into machine-readable JSON. The framework combines **PPStructureV3** for OCR and layout analysis, **Whisper** for speech transcription, **SpeechBrain** for audio embedding and speaker processing, and **Meta Llama 3 8B Instruct** (via "llama-cpp-python") to generate structured outputs. Additionally, the system supports **Braille conversion**, enabling accessibility for visually impaired users.
+A Python-based multimodal document parsing system capable of extracting structured information from **documents, images, audio, and video files** and converting the extracted content into machine-readable JSON. The framework combines **PPStructureV3** for OCR and layout analysis, **Whisper** for speech transcription, **SpeechBrain** for audio embedding and **Spectral Clustering** for speaker diarization, and **Meta Llama 3 8B Instruct** (via "llama-cpp-python") to generate structured outputs. Additionally, the system supports **Braille conversion**, enabling accessibility for visually impaired users.
 
 ---
 ## 🚀 Features
@@ -7,20 +7,20 @@ A Python-based multimodal document parsing system capable of extracting structur
 - 🧩 **Multimodal Input Support**  
   Handles PDFs, DOCX, plain text, images, audio, and video.
 
-- 📄 **PDF/Document Parsing**  
-  Extracts text, tables, and images from documents.
+- 📄 **Intelligent Document Parsing**
+  Extracts text blocks, tables, images, and layout information from PDF, DOCX and TXT files while preserving reading order before generating structured JSON outputs.
 
-- 🔍 **OCR for Images**  
-  Uses PPStructureV3 to extract structured content from scanned documents or images.
+- 🔍 **Hybrid Visual Information Extraction**
+  Uses PPStructureV3 for OCR and layout analysis and leverages Meta Llama 3 to convert extracted content into structured JSON with an OCR-based fallback mechanism.
 
 - 🤖 **LLM Integration**  
   Llama3 converts parsed content into structured JSON.
 
 - 🎤**Efficient Audio Transcribing along with Speaker Diarization**
-  Audio files are efficiently parsed using whisper, resemblyzer and Spectral Clustering.
+  Implements speech transcription using Whisper and speaker diarization using Resemblyzer and Spectral Clustering to generate speaker-labeled transcripts.
 
-- 🎥**Implemented Effective Video Parsing Pipeline**
-  An efficient video parsing pipeline has been implemented to extract structured JSON output from video files.
+- 🎥 **Hybrid Video Understanding Pipeline**
+  Extracts audio using FFmpeg, identifies slide frames using motion analysis and SSIM-based duplicate removal, and combines OCR with speech transcripts to generate structured outputs.
   
 - ⚡ **Singleton Model Loading**  
   LLM, OCR and Whisper models are loaded only once for maximum efficiency.
@@ -38,11 +38,34 @@ Converts structured JSON output into Braille code for visually impaired users.
 
 ---
 
+## 📊 Comparative Performance Analysis
+
+The proposed hybrid multimodal framework was compared with existing document understanding systems. Unlike traditional single-modality approaches, the system integrates text, image, speech, and video processing into a unified pipeline while maintaining competitive performance across modalities.
+![Comparative Performance Analysis](images/comparison.png)
+
+---
+
 ## 🖼️ User Interface
 
 ![Interface](images/interface.png)
 
 Interactive interface for uploading files and visualizing structured outputs.
+
+---
+
+## 🛠️ Core Technologies
+
+- Python
+- PaddleOCR PPStructureV3
+- Meta Llama 3 8B Instruct
+- llama-cpp-python
+- Whisper
+- Resemblyzer
+- Spectral Clustering
+- OpenCV
+- SSIM
+- FFmpeg
+- PyTorch
 
 ---
 
@@ -166,9 +189,16 @@ python -m app
 ---
 
 ## 🌟 Future Improvements
-- Improve performance by **fine-tuning models** on **domain-specific datasets** and leveraging **GPU acceleration** when resources are available.
-- **Retrieval-Augmented Generation (RAG)** support for querying parsed documents.
-- **Multilingual** document parsing.
+
+### 🔧 Model Fine-Tuning
+- Fine-tune models on domain-specific datasets.
+- Improve inference efficiency using GPU acceleration.
+
+### 🧠 Retrieval-Augmented Generation (RAG)
+- Enable semantic querying over parsed documents.
+
+### 🌐 Multilingual Support
+- Extend parsing capabilities to multiple languages.
 
 ---
 
