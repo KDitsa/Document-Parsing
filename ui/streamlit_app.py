@@ -182,7 +182,7 @@ with col1:
     st.markdown("""
         <div class="hero-section">
             <div class="header-title">M-PARSER</div>
-            <p style="font-size: 24px; color: #2B292E; max-width: 800px; margin: 0 auto; line-height: 1.6;">
+            <p style="font-size: 24px; color: #2B292E; max-width: 800px; margin: 0 auto; line-height: 1.6; text-align: left;">
                     Turn chaos into structure. Instantly.<br>
                     <span style="color: #250F91; font-weight: 600;">AI that understands documents like humans do — but faster.</span>
                 </p>

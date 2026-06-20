@@ -117,7 +117,7 @@ def make_navbar():
     # We use a container to act as our "Wrapper"
     with st.container():
         # Column setup: [Logo Space, Spacer, Nav Items]
-        c1, c2, c3, c4 = st.columns([0.11, 0.18, 0.46, 0.6])
+        c1, c2, c3, c4 = st.columns([0.11, 0.18, 0.36, 0.7])
         
         with c1:
             st.image(img)
